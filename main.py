@@ -329,7 +329,11 @@ async def evaluate_excel(
         print("Failed to log debug parsing info:\n", traceback.format_exc())
     engine.validate_inputs(mapped_matrix, material_names)
     raw_ranking, tree = engine.calculate_scores(material_names, mapped_matrix, climate.model_dump())
-    engine.print_decision_tree(tree)
+    try:
+        engine.print_decision_tree_rich(tree, include_details=True)
+    except Exception:
+        # Fallback seguro para no romper la API si Rich no estuviera disponible.
+        engine.print_decision_tree(tree)
 
     ranking = [
         MaterialEvaluation(

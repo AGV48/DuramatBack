@@ -195,6 +195,37 @@ class DecisionModelEngine:
         for child in node.children:
             self.print_decision_tree(child, depth + 1)
 
+    def _build_rich_tree(self, node: DecisionNode, include_details: bool = True) -> Any:
+        from rich.tree import Tree  # type: ignore[reportMissingImports]
+
+        label = f"[bold cyan]{node.name}[/bold cyan]"
+        branch = Tree(label)
+
+        if include_details and node.description:
+            branch.add(f"[dim]{node.description}[/dim]")
+
+        if include_details and node.criteria:
+            criteria_branch = branch.add("[yellow]Criterios[/yellow]")
+            for key, value in node.criteria.items():
+                criteria_branch.add(f"{key}: {value:.6g}" if isinstance(value, float) else f"{key}: {value}")
+
+        if include_details and node.score_by_material:
+            scores_branch = branch.add("[green]Puntajes por material[/green]")
+            for material, score in node.score_by_material.items():
+                scores_branch.add(f"{material}: {score:.6g}")
+
+        for child in node.children:
+            branch.add(self._build_rich_tree(child, include_details=include_details))
+
+        return branch
+
+    def print_decision_tree_rich(self, node: DecisionNode, include_details: bool = True) -> None:
+        from rich.console import Console  # type: ignore[reportMissingImports]
+
+        console = Console(force_terminal=True, soft_wrap=True)
+        rich_tree = self._build_rich_tree(node, include_details=include_details)
+        console.print(rich_tree)
+
     def calculate_scores(
         self,
         material_names: list[str],
